@@ -1,0 +1,8 @@
+01) Iniciando configuração básica do projeto com "express-generator":
+
+    npx express-generator --no-view --git
+
+
+02) Instalando dependencias que vem por default com o "express-generator":
+
+    yarn

@@ -1,0 +1,79 @@
+01) Instalando o Sequelize:
+
+    yarn add sequelize
+
+
+
+02) Instalando o Sequelize CLI como dependencia de desenvolvimento:
+
+    yarn add sequelize-cli -D
+
+
+
+03) Inicializando o Sequelize com o Sequelize CLI:
+
+    O que isso faz?
+    Gera uma pasta de "migrations", "models", "seeders" e "config".
+
+
+    yarn sequelize init
+
+
+04) Organizando as pastas:
+
+    04.1) A primeira coisa que faremos é criar uma pasta chamada "database". 
+
+    04.2) Dentro da pasta "database" iremos colocar a pasta "migrations" e pasta "seeders"
+
+    04.3) Dentro da pasta "src" iremos colocar os "models"
+
+    04.4) A pasta "config" será mantida na raíz do projeto.
+          Dentro dessa pasta nós temos um arquivo "json" que será 
+          usado para estabelecer a conexão com o banco dedos. 
+          Nesse arquivo serão inseridas as credenciais do banco de dados.
+
+
+    04.5) Renomearemos o arquivo "config.json" para "database.json"
+
+
+
+05) Modificando as credenciais de acesso que vem no arquivo "config.json":
+
+    (somente para "development"):
+
+    O que precisa ser mudado no arquivo?
+
+    ->  Precisaremos informar a senha do banco de dados:
+        "password": "root"
+
+    
+    ->  Precisaremos informar o nome do banco de dados:
+        "database": "nomedobanco"
+
+
+    -> Precisaremos especificar o dieleto, ou seja, qual banco estamos usando:
+        "dialect": "mariadb"
+
+
+06) Criando o arquivo de configuração do sequelize na raíz do projeto:
+
+    ".sequelizerc"
+
+
+07) Estrutura do arquivo de configuração do Sequelize: 
+
+    Porque o arquivo foi criado?
+    Porque precisamos ensinar ao Sequelize o novo caminho para 
+    o qual movemos os arquivos que são "instalados" por default quando 
+    utilizamos o Sequelize CLI. 
+
+    ...
+
+    const path = require("path");
+
+    module.exports = {
+      config: path.resolve("config", "database.json"),
+      "models-path": path.resolve("src", "models"),
+      "seeders-path": path.resolve("database", "seeders"),
+      "migrations-path": path.resolve("database", "migrations"),
+    };

@@ -1,9 +1,12 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 
-/* GET home page. */
-router.get("/", function (req, res, next) {
-  res.send("Rota principal");
+const User = require("../models").User;
+
+router.get("/", async function (req, res, next) {
+  const users = await User.findAll();
+
+  res.json(users);
 });
 
 module.exports = router;

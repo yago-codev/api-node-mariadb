@@ -1,0 +1,248 @@
+01) Instalando o MariaDB:
+
+    yarn add mariadb
+
+
+02) Criando o banco de dados que foi definido dentro do arquivo "database.json"
+
+    Isso será feito utilizando uma interface, seja ela qual for. 
+    No momento estou utilizando o DBeaver.
+
+
+03) Criando o Model que irá gerar o arquivo de Migration e também o Model através do Sequelize:
+
+    Relembrando:
+    Model é o arquivo de modelo da Tabela/Entidade que 
+    iremos criar no banco de dados.
+    É através do Model que iremos trabalhar com 
+    as tabelas dentro da nossa aplicação.
+
+    Migration é o arquivo que contém a estrutura que 
+    será convertida na tabela dentro do Banco de Dados.
+
+    Comando para criar a Migration através do Sequelize:
+
+    yarn sequelize model:generate --name User 
+    --attributes name:string,description:string,pic:string,email:string,password:string --underscored
+
+
+04) Inserindo as modificações dentro do arquivo de Migration:
+
+    Porque?
+    Essas modificações servem para 
+    ajustarmos a estrutura das colunas,
+    pois por padrão o Sequelize define apenas
+    a estrutura básica de cada coluna.
+
+    Teremos que inserir manualmente o "allowNull", 
+    por exemplo.
+
+    Vejamos como ficou a estrutura da Migration finalizada:
+
+    "use strict";
+    module.exports = {
+      up: (queryInterface, Sequelize) => {
+        return queryInterface.createTable("Users", {
+          id: {
+            allowNull: false,
+            autoIncrement: true,
+            primaryKey: true,
+            type: Sequelize.INTEGER,
+          },
+          name: {
+            allowNull: false,
+            type: Sequelize.STRING,
+          },
+          description: {
+            type: Sequelize.STRING,
+          },
+          pic: {
+            type: Sequelize.STRING,
+          },
+          email: {
+            allowNull: false,
+            type: Sequelize.STRING,
+          },
+          password: {
+            allowNull: false,
+            type: Sequelize.STRING,
+          },
+          created_at: {
+            allowNull: false,
+            type: Sequelize.DATE,
+          },
+          updated_at: {
+            allowNull: false,
+            type: Sequelize.DATE,
+          },
+        });
+      },
+      down: (queryInterface, Sequelize) => {
+        return queryInterface.dropTable("Users");
+      },
+    };
+
+
+05) Comando para refletir a Migration dentro do banco de dados:
+
+    yarn sequelize db:migrate
+
+
+06) Refatorando o Model gerado pelo Sequelize:
+
+    Porque?
+    Por padrão o Sequelize gera o Model utilizando a sintaxe de ES5. 
+    O objetivo da refatoração é transformar esse Model em uma Classe. 
+
+    -> Como era:
+
+    'use strict';
+    module.exports = (sequelize, DataTypes) => {
+      const User = sequelize.define('User', {
+        name: DataTypes.STRING,
+        description: DataTypes.STRING,
+        pic: DataTypes.STRING,
+        email: DataTypes.STRING,
+        password: DataTypes.STRING
+      }, {
+        underscored: true,
+      });
+      User.associate = function(models) {
+        // associations can be defined here
+      };
+      return User;
+    };
+
+    -> Como ficou
+
+    const Sequelize = require('sequelize');
+    const Model = Sequelize.Model;
+    const Op = Sequelize.Op;
+
+    export default class User extends Model {
+      static init(sequelize, DataTypes) {
+        return super.init({
+            name: {
+              type: DataTypes.STRING,
+              allowNull: false,
+              validate: {
+                notNull: {
+                  msg: "O nome deve ser informado"
+                }
+              }
+            },
+            description: DataTypes.STRING,
+            pic: DataTypes.STRING,
+            email: {
+              type: DataTypes.STRING,
+              allowNull: false,
+              validate: {
+                notNull: {
+                  msg: 'O email deve ser informado'
+                },
+                isEmail: { // validação nativa do Sequelize
+                  msg: "Por favorm informe um email válido"
+                },
+              }
+            }, 
+            password: {
+              type: DataTypes.STRING,
+              allowNull: false,
+              validate: {
+                notNull: {
+                  msg: 'A senha deve ser informada'
+                }
+              },
+            },
+          }, {
+            sequelize,
+            underscored: true
+          });
+        })
+      }
+      static associate(models) {
+
+      }
+    }
+
+
+07) Refatorando o arquivo de entrada dos Models:
+
+    O que esse arquivo de entrada faz?
+    Ele serve para fazer a leitura de todos os Models declarados na aplicação. 
+    É através desse arquivo que teremos acesso a
+    todas as colunas e estruturas definidas nas tabelas do nosso banco de dados.
+    Será por meio dos Models que iremos manipular os dados. 
+
+    Dentro do "forEach" nós iremos
+    refatorar o conteúdo da constante "model".
+
+    Outra coisa que será feita é 
+    inicializarmos o carregamento do Model, 
+    acessando a variável logo abaixo da constante "model":
+
+    Era assim:
+
+    fs
+      .readdirSync(__dirname)
+      .filter(file => {
+        return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
+      })
+      .forEach(file => {
+        const model = sequelize['import'](path.join(__dirname, file));  //  <<<<<<<<<<<
+        db[model.name] = model;
+      });
+
+
+    Ficou assim:
+
+    fs
+      .readdirSync(__dirname)
+      .filter(file => {
+        return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
+      })
+      .forEach(file => {
+        const model = require(path.join(__dirname, file));  //  <<<<<<<<<<<<<<
+        db[model.name] = model.init(sequelize, Sequelize);  //  <<<<<<<<<<<<<<
+      });
+
+
+08) Corrigindo o caminho para o arquivo de configuração "database.json",
+    ainda dentro do arquivo de entrada dos Models:
+
+    Era assim:
+
+    const fs = require("fs");
+    const path = require("path");
+    const Sequelize = require("sequelize");
+    const basename = path.basename(__filename);
+    const env = process.env.NODE_ENV || "development";
+    const config = require(__dirname + "/../../config/config.json")[env];  //  <<<<<<<<<
+    const db = {};
+
+    Ficou assim:
+
+    const fs = require("fs");
+    const path = require("path");
+    const Sequelize = require("sequelize");
+    const basename = path.basename(__filename);
+    const env = process.env.NODE_ENV || "development";
+    const config = require(__dirname + "/../../config/database.json")[env];  //  <<<<<<<<<<<
+    const db = {};
+
+
+08) Importando o Model dentro do arquivo de rotas ("index.js") e 
+    retornando todos os registros do model User:
+
+    const express = require("express");
+    const router = express.Router();
+
+    const User = require("../models").User;
+
+    router.get("/", async function (req, res, next) {  //  <<<<<<<<<<
+      const users = await User.findAll();  //  <<<<<<<<<<
+
+      res.json(users);  //  <<<<<<<<<<
+    });  //  <<<<<<<<<<
+
+    module.exports = router;

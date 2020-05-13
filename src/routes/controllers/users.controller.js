@@ -1,145 +1,130 @@
 const User = require("../../models").User;
 const Sequelize = require("sequelize");
+
 const Op = Sequelize.Op;
+
+const successResponse = require("../responses/success.response");
+const invalidResponse = require("../responses/invalid.response");
+const errorResponse = require("../responses/error.response");
 
 class UsersController {
   async index(req, res, next) {
     try {
-      const limit = req.query.limit ? parseInt(req.query.limit) : 20;
-      const offset = req.query.offset ? parseInt(req.query.offset) : 0;
+      const { entities, meta } = await User.search(req.query);
 
-      let where = {};
-
-      if (req.query.name) {
-        where.name = {
-          [Op.like]: `%${req.query.name}%`,
-        };
-      }
-
-      if (req.query.email) {
-        where.email = req.query.email;
-      }
-
-      const entities = await User.findAndCountAll({
-        where: where,
-        limit: limit,
-        offset: offset,
-      });
-
-      return res.status(200).json({
-        status: "SUCCESS",
-        data: entities,
-        meta: {
-          limit: limit,
-          offset: offset,
-        },
-      });
+      return successResponse(res, 200, null, entities, meta);
     } catch (error) {
-      return res.status(500).json({
-        status: "ERROR",
-        message: "Não foi possível listar entidades de Usuários",
-      });
+      return errorResponse(
+        res,
+        500,
+        "Não foi possível listar entidades de Usuários",
+        error
+      );
     }
   }
   async show(req, res, next) {
     try {
-      const entity = await User.findByPk(req.param.id);
+      const entity = await User.get(req.params.id);
 
-      return res.status(200).json({
-        status: "SUCCESS",
-        message: entity,
-      });
+      return successResponse(res, 200, null, entity, null);
     } catch (error) {
-      return res.status(500).json({
-        status: "ERROR",
-        message:
-          "Não foi possível recuperar os dados da entidade de Usuários pelo Id",
-      });
+      return errorResponse(
+        res,
+        500,
+        "Não foi possível recuperar os dados da entidade de Usuários pelo Id",
+        error
+      );
     }
   }
-  async store(req, res, next) {
+  async create(req, res, next) {
     try {
       const entity = await User.create(req.body);
 
-      return res.status(200).json({
-        status: "SUCCESS",
-        message: "Nova entidade criada com sucesso em Usuários",
-        data: entity,
-      });
+      return successResponse(
+        res,
+        200,
+        "Nova entidade criada com sucesso em Usuários",
+        entity,
+        null
+      );
     } catch (error) {
       if (error.name && errror.name.includes("SequelizeValidation")) {
-        return res.status(404).json({
-          status: "INVALID",
-          message: "Dados informados não são válidos",
-          error: error.errors.map((err) => {
-            return {
-              message: err.message,
-              field: err.path,
-              value: err.value,
-            };
-          }),
-        });
+        return invalidResponse(
+          res,
+          400,
+          "Dados informados não são válidos",
+          error
+        );
       }
 
-      return res.status(500).json({
-        status: "ERROR",
-        message: "Erro ao tentar incluir entidade em Usuários",
-      });
+      return errorResponse(
+        res,
+        500,
+        "Erro ao tentar incluir entidade em Usuários",
+        error
+      );
     }
   }
   async update(req, res, next) {
     try {
-      const entityOld = await User.findByPk(req.param.id);
+      const entityOld = await User.get(req.params.id);
 
       const entityNew = await entityOld.update(req.body);
 
-      return res.status(200).json({
-        status: "SUCCESS",
-        message: "Entidade atualizada com sucesso em Usuários",
-        data: entityNew,
-      });
+      return successResponse(
+        res,
+        200,
+        "Entidade atualizada com sucesso em Usuários",
+        entityNew,
+        null
+      );
     } catch (error) {
       if (error.name && error.name.includes("SequelizeValidation")) {
-        return res.status(404).json({
-          status: "INVALID",
-          message: "Dados informados não são válidos",
-          error: error.erros.map((err) => {
-            return {
-              message: err.message,
-              field: err.path,
-              value: err.value,
-            };
-          }),
-        });
+        return errorResponse(
+          res,
+          404,
+          "Dados informados não são válidos",
+          error
+        );
       }
 
-      return res.status(500).json({
-        status: "ERROR",
-        message: "Erro ao atualizar entidade em Usuários",
-      });
+      return errorResponse(
+        res,
+        500,
+        "Erro ao atualizar entidade em Usuários",
+        error
+      );
     }
   }
   async remove(req, res, next) {
     try {
-      const entity = await User.findByPk(req.param.id);
+      const entity = await User.get(req.params.id);
 
       if (!entity) {
-        return res.status(404).json({
-          status: "INVALID",
-          message:
-            "Não foi possível recuperar os dados da entidade de Usuários pelo Id",
-        });
+        return invalidResponse(
+          res,
+          404,
+          "Não foi possível recuperar os dados da entidade de Usuários pelo Id",
+          error
+        );
       }
 
-      return res.status(204).json({
-        status: "SUCCESS",
-        data: "Entidade excluída com sucesso em Usuários",
-      });
+      entity.destroy();
+
+      return successResponse(
+        res,
+        204,
+        "Entidade excluída com sucesso em Usuários",
+        entity,
+        null
+      );
     } catch (error) {
-      return res.status(500).json({
-        status: "ERROR",
-        message: "",
-      });
+      return errorResponse(
+        res,
+        500,
+        "Erro ao tentar deletar entidade em Usuários",
+        error
+      );
     }
   }
 }

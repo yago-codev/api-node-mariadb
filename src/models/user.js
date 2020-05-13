@@ -47,6 +47,42 @@ class User extends Model {
     );
   }
   static associate(models) {}
+
+  static async search(query) {
+    const limit = query.limit ? parseInt(query.limit) : 20;
+    const offset = query.offset ? parseInt(query.offset) : 0;
+
+    let where = {};
+
+    if (query.name) {
+      where.name = {
+        [Op.like]: `%${query.name}%`,
+      };
+    }
+
+    if (query.email) {
+      where.email = query.email;
+    }
+
+    const entities = await User.findAndCountAll({
+      where: where,
+      limit: limit,
+      offset: offset,
+    });
+
+    return {
+      entities: entities.rows,
+      meta: {
+        count: entities.count,
+        limit: limit,
+        offset: offset,
+      },
+    };
+  }
+
+  static async get(id) {
+    return await User.findByPk(id, {});
+  }
 }
 
 module.exports = User;

@@ -3,10 +3,10 @@ const router = express.Router();
 
 const UsersController = require("./controllers/users.controller");
 
-router.get("/", UsersController.index.bind(UsersController));
-router.get("/:id", UsersController.show.bind(UsersController));
-router.post("/", UsersController.create.bind(UsersController));
-router.patch("/:id", UsersController.update.bind(UsersController));
-router.delete("/:id", UsersController.remove.bind(UsersController));
+router.get("/", UsersController.bindMethod("index"));
+router.get("/:id", UsersController.bindMethod("show"));
+router.post("/", UsersController.bindMethod("create"));
+router.patch("/:id", UsersController.bindMethod("update"));
+router.delete("/:id", UsersController.bindMethod("remove"));
 
 module.exports = router;

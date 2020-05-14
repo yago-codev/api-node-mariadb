@@ -121,7 +121,7 @@ class User extends Model {
       );
 
       return {
-        user: user.transform(),
+        user: user,
         token: token,
       };
     } catch (error) {
@@ -129,14 +129,13 @@ class User extends Model {
     }
   }
 
-  transform() {
-    return {
-      id: this.id,
-      name: this.name,
-      email: this.email,
-      description: this.description,
-      pic: this.pic,
-    };
+  // Sobrescrevendo método para apagar o "password" dos retornos da API
+  toJSON() {
+    const values = Object.assign({}, this.get());
+
+    delete values.password;
+
+    return values;
   }
 }
 

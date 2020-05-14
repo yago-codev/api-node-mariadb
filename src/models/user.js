@@ -1,4 +1,8 @@
 const Sequelize = require("sequelize");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv/config");
+
 const Model = Sequelize.Model;
 const Op = Sequelize.Op;
 
@@ -43,9 +47,15 @@ class User extends Model {
       {
         sequelize,
         underscored: true,
+        hooks: {
+          beforeSave: (user, options) => {
+            user.password = bcrypt.hashSync(user.password, 10);
+          },
+        },
       }
     );
   }
+
   static associate(models) {}
 
   static async search(query) {
@@ -82,6 +92,51 @@ class User extends Model {
 
   static async get(id) {
     return await User.findByPk(id, {});
+  }
+
+  static async verifyLogin(email, password) {
+    try {
+      let user = await User.findOne({
+        where: {
+          email: email,
+        },
+      });
+
+      if (!user) {
+        throw new Error("Email não encontrado");
+      }
+
+      if (!bcrypt.compareSync(password, user.password)) {
+        throw new Error("Senha inválida");
+      }
+
+      let token = jwt.sign(
+        {
+          id: user.id,
+        },
+        process.env.SECRET,
+        {
+          expiresIn: "1d",
+        }
+      );
+
+      return {
+        user: user.transform(),
+        token: token,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  transform() {
+    return {
+      id: this.id,
+      name: this.name,
+      email: this.email,
+      description: this.description,
+      pic: this.pic,
+    };
   }
 }
 

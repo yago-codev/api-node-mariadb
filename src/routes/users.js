@@ -8,5 +8,6 @@ router.get("/:id", UsersController.bindMethod("show"));
 router.post("/", UsersController.bindMethod("create"));
 router.patch("/:id", UsersController.bindMethod("update"));
 router.delete("/:id", UsersController.bindMethod("remove"));
+router.post("/login", UsersController.bindMethod("login"));
 
 module.exports = router;

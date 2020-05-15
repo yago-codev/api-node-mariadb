@@ -4,12 +4,20 @@ const router = express.Router();
 const UsersController = require("./controllers/users.controller");
 
 const verifyAccessToken = require("./middlewares/verifyAccessToken.middleware");
+const verifyOwner = require("./middlewares/verifyOwner.middleware");
+const onlyAllowsOwner = [verifyAccessToken, verifyOwner];
 
-router.get("/", verifyAccessToken, UsersController.bindMethod("index"));
-router.get("/:id", verifyAccessToken, UsersController.bindMethod("show"));
+// Criar
 router.post("/", UsersController.bindMethod("create"));
-router.patch("/:id", verifyAccessToken, UsersController.bindMethod("update"));
-router.delete("/:id", verifyAccessToken, UsersController.bindMethod("remove"));
+// Logar
 router.post("/login", UsersController.bindMethod("login"));
+// Listar Todos
+router.get("/", verifyAccessToken, UsersController.bindMethod("index"));
+// Listar Um Usuário
+router.get("/:id", verifyAccessToken, UsersController.bindMethod("show"));
+// Editar
+router.patch("/:id", onlyAllowsOwner, UsersController.bindMethod("update"));
+// Deletar
+router.delete("/:id", onlyAllowsOwner, UsersController.bindMethod("remove"));
 
 module.exports = router;

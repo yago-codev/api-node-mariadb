@@ -129,6 +129,10 @@ class User extends Model {
     }
   }
 
+  static async verifyToken(token) {
+    return await jwt.verify(token, process.env.SECRET);
+  }
+
   // Sobrescrevendo método para apagar o "password" dos retornos da API
   toJSON() {
     const values = Object.assign({}, this.get());

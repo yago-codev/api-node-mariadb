@@ -3,11 +3,13 @@ const router = express.Router();
 
 const UsersController = require("./controllers/users.controller");
 
-router.get("/", UsersController.bindMethod("index"));
-router.get("/:id", UsersController.bindMethod("show"));
+const verifyAccessToken = require("./middlewares/verifyAccessToken.middleware");
+
+router.get("/", verifyAccessToken, UsersController.bindMethod("index"));
+router.get("/:id", verifyAccessToken, UsersController.bindMethod("show"));
 router.post("/", UsersController.bindMethod("create"));
-router.patch("/:id", UsersController.bindMethod("update"));
-router.delete("/:id", UsersController.bindMethod("remove"));
+router.patch("/:id", verifyAccessToken, UsersController.bindMethod("update"));
+router.delete("/:id", verifyAccessToken, UsersController.bindMethod("remove"));
 router.post("/login", UsersController.bindMethod("login"));
 
 module.exports = router;
